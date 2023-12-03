@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  main:
+    container_name: main
+    image: node:20.8.1-alpine
+    working_dir: /app
+    env_file:
+      - .env
+    command: sh -c "npm ci && npm run build && npm run start:dev"
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+      - /app/node_modules
+    restart: on-failure
+
+  postgres:
+    container_name: postgres
+    image: postgres:15.4
+    env_file:
+      - .env
+    environment:
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - '8765:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+  pgadmin-compose:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    env_file:
+      - .env
+    ports:
+      - '16543:80'
+    depends_on:
+      - postgres
+    restart: always
+
+volumes:
+  pgdata:
