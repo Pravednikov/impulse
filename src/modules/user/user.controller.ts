@@ -1,7 +1,6 @@
 import { Controller, Get, Logger, Param, UseGuards } from '@nestjs/common';
 import { ServerHttpErrorResponse } from 'common/errorHandlers/serverErrorResponse';
-import { CanGetEmailGuard } from 'common/guards/canGetEmail.guard';
-import { IsAuthGuard } from 'common/guards/isAuth.guard';
+import { CanGetUserByEmailGuard } from 'common/guards/canGetUserByEmail.guard';
 import { User } from 'database/entities/user.entity';
 
 import { UserService } from './user.service';
@@ -12,10 +11,10 @@ export class UserController {
 
   constructor(private userService: UserService) {}
 
-  @UseGuards(IsAuthGuard, CanGetEmailGuard)
+  @UseGuards(CanGetUserByEmailGuard)
   @Get('/:email')
   async getByEmail(@Param('email') email: string): Promise<User> {
-    this.logger.log(`API V1 sign in`);
+    this.logger.log(`API V1 get user by email`);
 
     const response = await this.userService.FindByEmail(email);
 

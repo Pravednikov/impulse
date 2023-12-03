@@ -1,17 +1,17 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   Logger,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
 @Injectable()
-export class CanGetEmailGuard implements CanActivate {
-  private logger = new Logger(CanGetEmailGuard.name);
+export class CanGetUserByEmailGuard implements CanActivate {
+  private logger = new Logger(CanGetUserByEmailGuard.name);
 
   constructor(
     private jwtService: JwtService,
@@ -38,7 +38,7 @@ export class CanGetEmailGuard implements CanActivate {
       return refresh['email'] === email;
     } catch (error) {
       this.logger.error(error);
-      throw new UnauthorizedException({ message: 'Unauthorized' });
+      throw new ForbiddenException();
     }
   }
 }

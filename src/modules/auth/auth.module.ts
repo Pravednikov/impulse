@@ -1,6 +1,12 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
+import { UpdateTokenMiddleware } from 'common/middlewares/updateToken.middleware';
 
 import env from '../../utils/env';
 import { CookieModule } from '../cookie/cookie.module';
@@ -27,4 +33,10 @@ import { AuthService } from './auth.service';
   providers: [AuthService],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(UpdateTokenMiddleware)
+      .forRoutes({ path: 'auth/signout', method: RequestMethod.POST });
+  }
+}

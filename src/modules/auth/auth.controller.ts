@@ -6,11 +6,9 @@ import {
   Logger,
   Post,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { ServerHttpErrorResponse } from 'common/errorHandlers/serverErrorResponse';
-import { IsAuthGuard } from 'common/guards/isAuth.guard';
 import { Response } from 'express';
 
 import { CookieService } from '../cookie/cookie.service';
@@ -65,7 +63,6 @@ export class AuthController {
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(IsAuthGuard)
   @Post('signout')
   signOut(@Res({ passthrough: true }) res: Response): void {
     this.logger.log(`API V1 sign out`);
