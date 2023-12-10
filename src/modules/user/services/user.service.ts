@@ -1,12 +1,12 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { serverErrorResponse } from 'common/errorHandlers/serverErrorResponse';
 import { UserTypes } from 'common/interfaces/Repository/IUserRepository';
 import { IUserService } from 'common/interfaces/Service/IUserService';
 import { ServiceResponse } from 'common/types/ServiceResponse';
-import { User } from 'database/entities/user.entity';
+import { SignUp } from 'modules/auth/dtos/sign-up.request';
 
-import { SignUpDto } from '../auth/dtos/sign-up.dto';
-import { UserRepository } from './repo/user.repository';
+import { User } from '../entities/user.entity';
+import { UserRepository } from '../repo/user.repository';
 
 @Injectable()
 export class UserService implements IUserService {
@@ -14,32 +14,31 @@ export class UserService implements IUserService {
 
   constructor(private userRepository: UserRepository) {}
 
-  async FindByEmail(email: string): Promise<ServiceResponse<User>> {
+  async findByEmail(email: string): Promise<ServiceResponse<User>> {
     this.logger.debug(`Processing find user for email: ${email}`);
 
     try {
-      const user = await this.userRepository.GetByEmail(email);
+      const user = await this.userRepository.getByEmail(email);
 
       if (!user) {
         return {
           succeeded: false,
           message: 'User not found',
-          statusCode: HttpStatus.NOT_FOUND,
         };
       }
 
       return { succeeded: true, message: 'User has been found', data: user };
     } catch (error: unknown) {
       this.logger.error(`Processing find user by email failed for ${email}`);
-      return serverErrorResponse(error, HttpStatus.INTERNAL_SERVER_ERROR);
+      return serverErrorResponse(error);
     }
   }
 
-  async Create(userDto: SignUpDto): Promise<ServiceResponse<UserTypes>> {
+  async create(userDto: SignUp): Promise<ServiceResponse<UserTypes>> {
     this.logger.debug(`Processing new user`);
 
     try {
-      const user = await this.userRepository.Create(userDto);
+      const user = await this.userRepository.create(userDto);
 
       if (!user) {
         return { succeeded: false, message: "Couldn't create new user" };
@@ -48,19 +47,19 @@ export class UserService implements IUserService {
       return { succeeded: true, message: 'User has been found', data: user };
     } catch (error: unknown) {
       this.logger.error(`Processing new user failed`);
-      return serverErrorResponse(error, HttpStatus.INTERNAL_SERVER_ERROR);
+      return serverErrorResponse(error);
     }
   }
 
-  async Save(user: UserTypes): Promise<ServiceResponse<void>> {
+  async save(user: UserTypes): Promise<ServiceResponse<void>> {
     this.logger.debug(`Processing save user for email: ${user.email}`);
 
     try {
-      await this.userRepository.Save(user);
+      await this.userRepository.save(user);
       return { succeeded: true, message: 'User has been saved' };
     } catch (error: unknown) {
       this.logger.error(`Processing save user failed for email: ${user.email}`);
-      return serverErrorResponse(error, HttpStatus.INTERNAL_SERVER_ERROR);
+      return serverErrorResponse(error);
     }
   }
 }

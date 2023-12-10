@@ -7,20 +7,20 @@ import { Response } from 'express';
 export class CookieService {
   constructor(private configService: ConfigService) {}
 
-  public setTokensToCookies(res: Response, token: token) {
+  public setTokensToCookies(res: Response, token: token): void {
     res.cookie('access_token', token.access_token, {
       httpOnly: true,
-      expires: new Date(
-        Date.now() +
-          +this.configService.getOrThrow('env.expiresInAccess') * 1000,
-      ),
+      expires: this.setExpiresDate('EXPIRES_IN_ACCESS'),
     });
     res.cookie('refresh_token', token.refresh_token, {
       httpOnly: true,
-      expires: new Date(
-        Date.now() +
-          +this.configService.getOrThrow('env.expiresInRefresh') * 1000,
-      ),
+      expires: this.setExpiresDate('EXPIRES_IN_REFRESH'),
     });
+  }
+
+  private setExpiresDate(expires: string): Date {
+    return new Date(
+      Date.now() + +this.configService.getOrThrow(expires) * 1000,
+    );
   }
 }

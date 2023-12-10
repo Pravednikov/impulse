@@ -1,12 +1,12 @@
 import { UserTypes } from 'common/interfaces/Repository/IUserRepository';
+import { SignUp } from 'modules/auth/dtos/sign-up.request';
 
-import { SignUpDto } from '../../../modules/auth/dtos/sign-up.dto';
 import { ServiceResponse } from '../../types/ServiceResponse';
 
 export interface IUserService {
-  FindByEmail(email: string): Promise<ServiceResponse<UserTypes>>;
+  findByEmail(email: string): Promise<ServiceResponse<UserTypes>>;
 
-  Create(user: SignUpDto): Promise<ServiceResponse<UserTypes>>;
+  create(user: SignUp): Promise<ServiceResponse<UserTypes>>;
 
-  Save(user: UserTypes): Promise<ServiceResponse<void>>;
+  save(user: UserTypes): Promise<ServiceResponse<void>>;
 }

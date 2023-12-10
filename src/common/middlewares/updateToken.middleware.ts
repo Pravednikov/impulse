@@ -1,16 +1,15 @@
 import {
   Injectable,
+  InternalServerErrorException,
   Logger,
   NestMiddleware,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { NextFunction, Request, Response } from 'express';
-
-import { AuthService } from '../../modules/auth/auth.service';
-import { CookieService } from '../../modules/cookie/cookie.service';
-import { UserService } from '../../modules/user/user.service';
+import { AuthService } from 'modules/auth/services/auth.service';
+import { CookieService } from 'modules/cookie/services/cookie.service';
+import { UserService } from 'modules/user/services/user.service';
 
 @Injectable()
 export class UpdateTokenMiddleware implements NestMiddleware {
@@ -19,24 +18,22 @@ export class UpdateTokenMiddleware implements NestMiddleware {
   constructor(
     private jwtService: JwtService,
     private userService: UserService,
-    private configService: ConfigService,
-    private authService: AuthService,
     private cookieService: CookieService,
+    private authService: AuthService,
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
     this.logger.debug(`Processing update token`);
 
     const { access_token, refresh_token } = req.cookies;
-    const secret = this.configService.getOrThrow('env.secret');
 
     if (!access_token && !refresh_token) {
       throw new UnauthorizedException({ message: 'Unauthorized' });
     }
 
     const [access, refresh] = await Promise.allSettled([
-      this.jwtService.verifyAsync(access_token, { secret }),
-      this.jwtService.verifyAsync(refresh_token, { secret }),
+      this.jwtService.verifyAsync(access_token),
+      this.jwtService.verifyAsync(refresh_token),
     ]);
 
     if (
@@ -62,15 +59,21 @@ export class UpdateTokenMiddleware implements NestMiddleware {
     }
 
     const userEmail = token.value['email'];
-    const user = await this.userService.FindByEmail(userEmail);
+    const user = await this.userService.findByEmail(userEmail);
 
     if (!user.succeeded) {
       return false;
     }
 
     if (response) {
-      const [access_token, refresh_token] =
-        await this.authService.GenerateToken(user.data);
+      const token = await this.authService.generateToken(user.data);
+
+      if (!token.succeeded) {
+        throw new InternalServerErrorException(token.message);
+      }
+
+      const { access_token, refresh_token } = token.data;
+
       this.cookieService.setTokensToCookies(response, {
         access_token,
         refresh_token,

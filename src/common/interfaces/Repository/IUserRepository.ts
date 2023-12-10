@@ -1,13 +1,12 @@
-import { User } from 'database/entities/user.entity';
-
-import { SignUpDto } from '../../../modules/auth/dtos/sign-up.dto';
+import { SignUp } from 'modules/auth/dtos/sign-up.request';
+import { User } from 'modules/user/entities/user.entity';
 
 export type UserTypes = User;
 
 export interface IUserRepository {
-  Create(user: SignUpDto): Promise<UserTypes>;
+  create(user: SignUp): Promise<UserTypes>;
 
-  GetByEmail(email: string): Promise<UserTypes>;
+  getByEmail(email: string): Promise<UserTypes>;
 
-  Save(user: UserTypes): Promise<UserTypes>;
+  save(user: UserTypes): Promise<UserTypes>;
 }

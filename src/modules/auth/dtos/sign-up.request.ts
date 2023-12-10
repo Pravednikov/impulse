@@ -5,7 +5,7 @@ import {
   IsStrongPassword,
 } from 'class-validator';
 
-export class SignUpDto {
+export class SignUp {
   @IsEmail()
   @IsString()
   @IsNotEmpty()

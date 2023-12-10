@@ -1,9 +1,15 @@
-import { Controller, Get, Logger, Param, UseGuards } from '@nestjs/common';
-import { ServerHttpErrorResponse } from 'common/errorHandlers/serverErrorResponse';
+import {
+  Controller,
+  Get,
+  InternalServerErrorException,
+  Logger,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { CanGetUserByEmailGuard } from 'common/guards/canGetUserByEmail.guard';
-import { User } from 'database/entities/user.entity';
 
-import { UserService } from './user.service';
+import { User } from '../entities/user.entity';
+import { UserService } from '../services/user.service';
 
 @Controller('user')
 export class UserController {
@@ -16,10 +22,10 @@ export class UserController {
   async getByEmail(@Param('email') email: string): Promise<User> {
     this.logger.log(`API V1 get user by email`);
 
-    const response = await this.userService.FindByEmail(email);
+    const response = await this.userService.findByEmail(email);
 
     if (!response.succeeded) {
-      throw new ServerHttpErrorResponse(response);
+      throw new InternalServerErrorException(response.message);
     }
 
     return response.data;

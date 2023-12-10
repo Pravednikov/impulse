@@ -1,11 +1,10 @@
 import {
   CanActivate,
   ExecutionContext,
-  ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
@@ -13,10 +12,7 @@ import { Request } from 'express';
 export class CanGetUserByEmailGuard implements CanActivate {
   private logger = new Logger(CanGetUserByEmailGuard.name);
 
-  constructor(
-    private jwtService: JwtService,
-    private configService: ConfigService,
-  ) {}
+  constructor(private jwtService: JwtService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     this.logger.debug(`Processing authentication guard`);
@@ -24,21 +20,19 @@ export class CanGetUserByEmailGuard implements CanActivate {
     try {
       const request: Request = context.switchToHttp().getRequest();
 
-      const { refresh_token } = request.cookies;
+      const refresh_token: string = request.cookies['refresh_token'];
       const email = request.params['email'];
 
       if (!refresh_token) {
         return false;
       }
 
-      const refresh = await this.jwtService.verifyAsync(refresh_token, {
-        secret: this.configService.getOrThrow('env.secret'),
-      });
+      const refresh = await this.jwtService.verifyAsync(refresh_token);
 
       return refresh['email'] === email;
     } catch (error) {
       this.logger.error(error);
-      throw new ForbiddenException();
+      throw new InternalServerErrorException();
     }
   }
 }

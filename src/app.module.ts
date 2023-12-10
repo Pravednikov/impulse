@@ -1,35 +1,30 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigType } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
 import {
-  ThrottlerGuard,
-  ThrottlerModule,
-  ThrottlerModuleOptions,
-} from '@nestjs/throttler';
-import { DatabaseModule } from 'database/database.module';
-import env from 'utils/env';
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UpdateTokenMiddleware } from 'common/middlewares/updateToken.middleware';
+import { AuthModule } from 'modules/auth/auth.module';
+import { CookieModule } from 'modules/cookie/cookie.module';
+import { UserModule } from 'modules/user/user.module';
 
-import { ModulesModule } from './modules/modules.module';
+import { throttleConfig, typeormConfig } from '../config';
 
 @Module({
   imports: [
-    ModulesModule,
-    DatabaseModule,
+    AuthModule,
+    UserModule,
+    CookieModule,
+    TypeOrmModule.forRootAsync(typeormConfig()),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [env],
     }),
-    ThrottlerModule.forRootAsync({
-      imports: [ConfigModule.forFeature(env)],
-      useFactory: (config: ConfigType<typeof env>) =>
-        [
-          {
-            ttl: +config.throttleTtl,
-            limit: +config.throttleLimit,
-          },
-        ] as ThrottlerModuleOptions,
-      inject: [env.KEY],
-    }),
+    ThrottlerModule.forRootAsync(throttleConfig()),
   ],
   controllers: [],
   providers: [
@@ -39,4 +34,17 @@ import { ModulesModule } from './modules/modules.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(UpdateTokenMiddleware)
+      .exclude(
+        { path: 'auth/signup', method: RequestMethod.POST },
+        {
+          path: 'auth/signin',
+          method: RequestMethod.POST,
+        },
+      )
+      .forRoutes('*');
+  }
+}

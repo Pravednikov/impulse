@@ -23,7 +23,7 @@ async function bootstrap() {
 
   // Get access to config port
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('env.port');
+  const port = configService.get<string>('PORT');
 
   await app.listen(port, () => console.log(`Server started on port = ${port}`));
 }

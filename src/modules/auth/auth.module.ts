@@ -1,42 +1,16 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
-import { ConfigModule, ConfigType } from '@nestjs/config';
-import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
-import { UpdateTokenMiddleware } from 'common/middlewares/updateToken.middleware';
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 
-import env from '../../utils/env';
+import { jwtConfig } from '../../../config';
 import { CookieModule } from '../cookie/cookie.module';
 import { UserModule } from '../user/user.module';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { AuthController } from './controllers/auth.controller';
+import { AuthService } from './services/auth.service';
 
 @Module({
-  imports: [
-    UserModule,
-    CookieModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule.forFeature(env)],
-      useFactory: (config: ConfigType<typeof env>): JwtModuleOptions => {
-        return {
-          global: true,
-          secret: config.secret,
-        } as JwtModuleOptions;
-      },
-      inject: [env.KEY],
-    }),
-  ],
+  imports: [UserModule, CookieModule, JwtModule.registerAsync(jwtConfig())],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],
 })
-export class AuthModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(UpdateTokenMiddleware)
-      .forRoutes({ path: 'auth/signout', method: RequestMethod.POST });
-  }
-}
+export class AuthModule {}

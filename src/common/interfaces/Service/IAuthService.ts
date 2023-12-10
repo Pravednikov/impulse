@@ -1,4 +1,5 @@
-import { SignUpDto } from '../../../modules/auth/dtos/sign-up.dto';
+import { User } from 'modules/user/entities/user.entity';
+
 import { ServiceResponse } from '../../types/ServiceResponse';
 
 export type token = {
@@ -7,7 +8,9 @@ export type token = {
 };
 
 export interface IAuthService {
-  SignIn(email: string, password: string): Promise<ServiceResponse<token>>;
+  validate(user: User, password: string): Promise<ServiceResponse<void>>;
 
-  SignUp(userDto: SignUpDto): Promise<ServiceResponse<token>>;
+  hashPassword(password: string): Promise<string>;
+
+  generateToken(user: User): Promise<ServiceResponse<token>>;
 }
